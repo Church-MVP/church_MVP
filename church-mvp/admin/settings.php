@@ -3,6 +3,7 @@
  * Site Settings - Enhanced with Tabs
  * 
  * Each section manages its own content and images independently
+ * Footer content syncs with General Settings automatically
  */
 
 // Set page title
@@ -121,28 +122,28 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST' && has_permission('edit_settings')) {
 <!-- Settings Tabs -->
 <div class="card">
     <div class="card-header" style="padding: 0;">
-        <ul class="settings-tabs" style="display: flex; list-style: none; margin: 0; padding: 0; border-bottom: 2px solid #e0e5eb;">
-            <li style="flex: 1;">
+        <ul class="settings-tabs" style="display: flex; list-style: none; margin: 0; padding: 0; border-bottom: 2px solid #e0e5eb; flex-wrap: wrap;">
+            <li style="flex: 1; min-width: 120px;">
                 <a href="?tab=general" class="tab-link <?php echo $active_tab == 'general' ? 'active' : ''; ?>">
                     <i class="fas fa-info-circle"></i> General
                 </a>
             </li>
-            <li style="flex: 1;">
+            <li style="flex: 1; min-width: 120px;">
                 <a href="?tab=homepage" class="tab-link <?php echo $active_tab == 'homepage' ? 'active' : ''; ?>">
                     <i class="fas fa-home"></i> Homepage
                 </a>
             </li>
-            <li style="flex: 1;">
+            <li style="flex: 1; min-width: 120px;">
                 <a href="?tab=about" class="tab-link <?php echo $active_tab == 'about' ? 'active' : ''; ?>">
                     <i class="fas fa-book-open"></i> About Page
                 </a>
             </li>
-            <li style="flex: 1;">
+            <li style="flex: 1; min-width: 120px;">
                 <a href="?tab=contact" class="tab-link <?php echo $active_tab == 'contact' ? 'active' : ''; ?>">
                     <i class="fas fa-envelope"></i> Contact Us
                 </a>
             </li>
-            <li style="flex: 1;">
+            <li style="flex: 1; min-width: 120px;">
                 <a href="?tab=livestream" class="tab-link <?php echo $active_tab == 'livestream' ? 'active' : ''; ?>">
                     <i class="fas fa-video"></i> Live Stream
                 </a>
@@ -223,6 +224,28 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST' && has_permission('edit_settings')) {
 .btn-add:hover {
     background: #218838;
 }
+.sync-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.375rem;
+    font-size: 0.75rem;
+    padding: 0.25rem 0.625rem;
+    background: #e7f3ff;
+    color: #0056b3;
+    border-radius: 12px;
+    margin-left: 0.5rem;
+}
+.sync-badge i {
+    font-size: 0.7rem;
+}
+@media (max-width: 768px) {
+    .office-hours-row {
+        grid-template-columns: 1fr;
+    }
+    .social-link-row {
+        grid-template-columns: 1fr;
+    }
+}
 </style>
 
 <?php if ($active_tab == 'general'): ?>
@@ -230,36 +253,157 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST' && has_permission('edit_settings')) {
      GENERAL SETTINGS TAB
      ============================================ -->
 <form method="POST" action="?tab=general" enctype="multipart/form-data">
+    <!-- Site Identity -->
     <div class="card">
         <div class="card-header">
-            <h3><i class="fas fa-info-circle"></i> General Information</h3>
+            <h3><i class="fas fa-church"></i> Site Identity</h3>
         </div>
         <div class="card-body">
+            <div class="form-group">
+                <label for="site_title">
+                    Site Title / Church Name
+                    <span class="sync-badge"><i class="fas fa-sync-alt"></i> Syncs to Footer</span>
+                </label>
+                <input type="text" id="site_title" name="site_title" class="form-control" 
+                       value="<?php echo htmlspecialchars($settings['site_title'] ?? 'Christ Mission Ministries Inc'); ?>"
+                       placeholder="Your Church Name">
+                <small style="color: #666;">This appears in the browser tab, footer, and various places on the site.</small>
+            </div>
+            
+            <div class="form-group">
+                <label for="footer_description">
+                    Footer Description
+                    <span class="sync-badge"><i class="fas fa-sync-alt"></i> Syncs to Footer</span>
+                </label>
+                <textarea id="footer_description" name="footer_description" class="form-control" rows="3" maxlength="300"><?php echo htmlspecialchars($settings['footer_description'] ?? 'Helping you grow your faith and connect with God\'s love. Join us every Sunday as we worship together.'); ?></textarea>
+                <small style="color: #666;">A short description that appears in the website footer (max 300 characters).</small>
+            </div>
+            
+            <!-- Logo Upload -->
+            <div class="form-group">
+                <label for="site_logo">Site Logo</label>
+                <?php if (!empty($settings['site_logo'])): ?>
+                <div style="margin-bottom: 1rem;">
+                    <img src="../<?php echo htmlspecialchars($settings['site_logo']); ?>" 
+                         style="max-height: 80px; border: 1px solid #e0e5eb; border-radius: 4px; padding: 0.5rem; background: #f8f9fa;">
+                    <p style="margin-top: 0.5rem; font-size: 0.85rem; color: #666;">Current logo</p>
+                </div>
+                <?php endif; ?>
+                <input type="file" id="site_logo" name="site_logo" class="form-control" accept="image/*">
+                <small style="color: #666;">Recommended: PNG or SVG with transparent background, max height 80px.</small>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Contact Information -->
+    <div class="card">
+        <div class="card-header">
+            <h3><i class="fas fa-address-card"></i> Primary Contact Information</h3>
+        </div>
+        <div class="card-body">
+            <div class="alert alert-info">
+                <i class="fas fa-info-circle"></i>
+                <strong>Note:</strong> This information syncs to the website footer. For detailed contact page settings, use the <a href="?tab=contact">Contact Us</a> tab.
+            </div>
+            
             <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1.5rem;">
                 <div class="form-group">
-                    <label for="site_title">Site Title</label>
-                    <input type="text" id="site_title" name="site_title" class="form-control" 
-                           value="<?php echo htmlspecialchars($settings['site_title'] ?? 'Christ Mission Ministries Inc'); ?>">
-                </div>
-                
-                <div class="form-group">
-                    <label for="church_address">Church Address</label>
+                    <label for="church_address">
+                        Church Address
+                        <span class="sync-badge"><i class="fas fa-sync-alt"></i> Syncs to Footer</span>
+                    </label>
                     <input type="text" id="church_address" name="church_address" class="form-control" 
-                           value="<?php echo htmlspecialchars($settings['church_address'] ?? ''); ?>">
+                           value="<?php echo htmlspecialchars($settings['church_address'] ?? ''); ?>"
+                           placeholder="123 Church Street, City, State 12345">
                 </div>
                 
                 <div class="form-group">
-                    <label for="church_phone">Church Phone</label>
+                    <label for="church_phone">
+                        Church Phone
+                        <span class="sync-badge"><i class="fas fa-sync-alt"></i> Syncs to Footer</span>
+                    </label>
                     <input type="tel" id="church_phone" name="church_phone" class="form-control" 
-                           value="<?php echo htmlspecialchars($settings['church_phone'] ?? ''); ?>">
+                           value="<?php echo htmlspecialchars($settings['church_phone'] ?? ''); ?>"
+                           placeholder="(555) 123-4567">
                 </div>
                 
                 <div class="form-group">
-                    <label for="church_email">Church Email</label>
+                    <label for="church_email">
+                        Church Email
+                        <span class="sync-badge"><i class="fas fa-sync-alt"></i> Syncs to Footer</span>
+                    </label>
                     <input type="email" id="church_email" name="church_email" class="form-control" 
-                           value="<?php echo htmlspecialchars($settings['church_email'] ?? ''); ?>">
+                           value="<?php echo htmlspecialchars($settings['church_email'] ?? ''); ?>"
+                           placeholder="info@yourchurch.com">
+                </div>
+                
+                <div class="form-group">
+                    <label for="church_website">Church Website URL</label>
+                    <input type="url" id="church_website" name="church_website" class="form-control" 
+                           value="<?php echo htmlspecialchars($settings['church_website'] ?? ''); ?>"
+                           placeholder="https://www.yourchurch.com">
                 </div>
             </div>
+        </div>
+    </div>
+    
+    <!-- Service Times Preview -->
+    <div class="card">
+        <div class="card-header">
+            <h3><i class="fas fa-clock"></i> Service Times (Quick Reference)</h3>
+        </div>
+        <div class="card-body">
+            <div class="alert alert-info" style="margin-bottom: 1rem;">
+                <i class="fas fa-info-circle"></i>
+                Service times are managed in the <a href="?tab=homepage"><strong>Homepage</strong></a> tab and automatically sync to the footer.
+            </div>
+            
+            <div style="background: #f8f9fa; padding: 1rem; border-radius: 6px;">
+                <p style="margin: 0; color: #666;"><strong>Current Service Times:</strong></p>
+                <ul style="margin: 0.5rem 0 0 1.5rem; color: #333;">
+                    <li><?php echo htmlspecialchars($settings['service_time_1'] ?? 'Sunday Morning: 9:00 AM'); ?></li>
+                    <li><?php echo htmlspecialchars($settings['service_time_2'] ?? 'Sunday Evening: 11:30 AM'); ?></li>
+                    <li><?php echo htmlspecialchars($settings['service_time_3'] ?? 'Wednesday Prayer: 7:00 PM'); ?></li>
+                </ul>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Social Media Preview -->
+    <div class="card">
+        <div class="card-header">
+            <h3><i class="fas fa-share-alt"></i> Social Media Links (Quick Reference)</h3>
+        </div>
+        <div class="card-body">
+            <div class="alert alert-info" style="margin-bottom: 1rem;">
+                <i class="fas fa-info-circle"></i>
+                Social media links are managed in the <a href="?tab=contact"><strong>Contact Us</strong></a> tab and automatically sync to the footer.
+            </div>
+            
+            <?php 
+            $social_links = [];
+            if (!empty($settings['contact_social_links'])) {
+                $social_links = json_decode($settings['contact_social_links'], true) ?? [];
+            }
+            ?>
+            
+            <?php if (!empty($social_links)): ?>
+            <div style="background: #f8f9fa; padding: 1rem; border-radius: 6px;">
+                <p style="margin: 0 0 0.5rem; color: #666;"><strong>Current Social Links:</strong></p>
+                <div style="display: flex; flex-wrap: wrap; gap: 0.5rem;">
+                    <?php foreach ($social_links as $link): ?>
+                        <?php if (!empty($link['url'])): ?>
+                        <span style="display: inline-flex; align-items: center; gap: 0.375rem; padding: 0.375rem 0.75rem; background: white; border: 1px solid #e0e5eb; border-radius: 20px; font-size: 0.85rem;">
+                            <i class="fab fa-<?php echo $link['platform']; ?>"></i>
+                            <?php echo ucfirst($link['platform']); ?>
+                        </span>
+                        <?php endif; ?>
+                    <?php endforeach; ?>
+                </div>
+            </div>
+            <?php else: ?>
+            <p style="color: #666; font-style: italic;">No social media links configured yet.</p>
+            <?php endif; ?>
         </div>
     </div>
     
@@ -318,25 +462,36 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST' && has_permission('edit_settings')) {
     
     <div class="card">
         <div class="card-header">
-            <h3><i class="fas fa-clock"></i> Service Times</h3>
+            <h3>
+                <i class="fas fa-clock"></i> Service Times
+                <span class="sync-badge"><i class="fas fa-sync-alt"></i> Syncs to Footer</span>
+            </h3>
         </div>
         <div class="card-body">
+            <div class="alert alert-info">
+                <i class="fas fa-info-circle"></i>
+                These service times will appear on the homepage and automatically sync to the website footer.
+            </div>
+            
             <div class="form-group">
                 <label for="service_time_1">Service Time 1</label>
                 <input type="text" id="service_time_1" name="service_time_1" class="form-control" 
-                       value="<?php echo htmlspecialchars($settings['service_time_1'] ?? 'Sunday Morning: 9:00 AM'); ?>">
+                       value="<?php echo htmlspecialchars($settings['service_time_1'] ?? 'Sunday Morning: 9:00 AM'); ?>"
+                       placeholder="e.g., Sunday Morning: 9:00 AM">
             </div>
             
             <div class="form-group">
                 <label for="service_time_2">Service Time 2</label>
                 <input type="text" id="service_time_2" name="service_time_2" class="form-control" 
-                       value="<?php echo htmlspecialchars($settings['service_time_2'] ?? 'Sunday Evening: 11:30 AM'); ?>">
+                       value="<?php echo htmlspecialchars($settings['service_time_2'] ?? 'Sunday Evening: 11:30 AM'); ?>"
+                       placeholder="e.g., Sunday Evening: 11:30 AM">
             </div>
             
             <div class="form-group">
                 <label for="service_time_3">Service Time 3</label>
                 <input type="text" id="service_time_3" name="service_time_3" class="form-control" 
-                       value="<?php echo htmlspecialchars($settings['service_time_3'] ?? 'Wednesday Prayer: 7:00 PM'); ?>">
+                       value="<?php echo htmlspecialchars($settings['service_time_3'] ?? 'Wednesday Prayer: 7:00 PM'); ?>"
+                       placeholder="e.g., Wednesday Prayer: 7:00 PM">
             </div>
         </div>
     </div>
@@ -571,12 +726,15 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST' && has_permission('edit_settings')) {
     <!-- Primary Contact Information -->
     <div class="card">
         <div class="card-header">
-            <h3><i class="fas fa-address-card"></i> Primary Contact Information</h3>
+            <h3>
+                <i class="fas fa-address-card"></i> Primary Contact Information
+                <span class="sync-badge"><i class="fas fa-sync-alt"></i> Syncs to Footer</span>
+            </h3>
         </div>
         <div class="card-body">
             <div class="alert alert-info">
                 <i class="fas fa-info-circle"></i> 
-                This information will be displayed prominently on your Contact Us page.
+                This information will be displayed on your Contact Us page and automatically syncs to the website footer.
             </div>
             
             <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1.5rem;">
@@ -733,12 +891,15 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST' && has_permission('edit_settings')) {
     <!-- Social Media Links -->
     <div class="card">
         <div class="card-header">
-            <h3><i class="fas fa-share-alt"></i> Social Media Links</h3>
+            <h3>
+                <i class="fas fa-share-alt"></i> Social Media Links
+                <span class="sync-badge"><i class="fas fa-sync-alt"></i> Syncs to Footer</span>
+            </h3>
         </div>
         <div class="card-body">
             <div class="alert alert-info">
                 <i class="fas fa-info-circle"></i> 
-                Add your church's social media profiles to display on the Contact Us page.
+                Add your church's social media profiles. These will display on the Contact Us page and website footer.
             </div>
             
             <div id="social-links-container">
