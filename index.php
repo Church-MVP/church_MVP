@@ -91,7 +91,10 @@ $show_view_all = true;
 include 'includes/post-section.php';
 ?>
 
-<!-- Latest Sermons Section -->
+<!-- ============================================================
+     Latest Sermons Section
+     Each card links to sermon.php?id=<sermon_id> for full details.
+     ============================================================ -->
 <?php if (!empty($latest_sermons)): ?>
 <section class="section" style="background-color: #fff;">
     <div class="container">
@@ -107,12 +110,21 @@ include 'includes/post-section.php';
             } else {
                 $sermon_image = 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=400&h=250&fit=crop';
             }
+
+            // Build the sermon detail URL
+            $sermon_url = 'sermon.php?id=' . (int) $sermon['id'];
             ?>
-            <div class="card">
+            <!-- Sermon card — entire card is a link to the detail page -->
+            <a href="<?php echo $sermon_url; ?>"
+               class="card sermon-card-link"
+               title="View full sermon: <?php echo htmlspecialchars($sermon['title']); ?>"
+               style="text-decoration: none; color: inherit; display: block;">
+
                 <img src="<?php echo $sermon_image; ?>" 
                      alt="<?php echo htmlspecialchars($sermon['title']); ?>" 
                      class="card-image"
                      onerror="this.src='https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=400&h=250&fit=crop';">
+
                 <div class="card-content">
                     <h3 class="card-title"><?php echo htmlspecialchars($sermon['title']); ?></h3>
                     <p class="card-meta">
@@ -124,14 +136,31 @@ include 'includes/post-section.php';
                         <i class="fas fa-book"></i> <?php echo htmlspecialchars($sermon['scripture_reference']); ?>
                         <?php endif; ?>
                     </p>
+
                     <?php if (!empty($sermon['description'])): ?>
                     <p class="card-text"><?php echo htmlspecialchars(substr($sermon['description'], 0, 100)); ?>...</p>
                     <?php endif; ?>
-                    <a href="services.php#sermons" class="btn btn-primary">Watch Sermon</a>
+
+                    <!-- CTA inside the card — visual affordance for the click -->
+                    <span class="btn btn-primary" style="display: inline-block; margin-top: 0.5rem;">
+                        <i class="fas fa-play-circle"></i> View Sermon
+                    </span>
                 </div>
-            </div>
+            </a>
             <?php endforeach; ?>
         </div>
+
+        <!-- Hover style for sermon cards -->
+        <style>
+        .sermon-card-link.card {
+            transition: transform 0.25s ease, box-shadow 0.25s ease;
+            cursor: pointer;
+        }
+        .sermon-card-link.card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 12px 30px rgba(0, 0, 0, 0.12);
+        }
+        </style>
         
         <div style="text-align: center; margin-top: 2rem;">
             <a href="services.php#sermons" class="btn btn-secondary">View All Sermons</a>
