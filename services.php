@@ -2,7 +2,8 @@
 /**
  * Unified Services, Sermons & Events Page
  * 
- * All ministry content in one place with smooth navigation
+ * All ministry content in one place with smooth navigation.
+ * Sermon cards link to sermon.php?id=<sermon_id> for full detail view.
  */
 
 // Include database connection
@@ -31,7 +32,7 @@ include 'includes/header.php';
 
 // Default images if none uploaded
 $default_sermon_image = 'assets/images/default-sermon.jpg';
-$default_event_image = 'assets/images/default-event.jpg';
+$default_event_image  = 'assets/images/default-event.jpg';
 ?>
 
 <!-- Page Hero -->
@@ -101,36 +102,74 @@ $default_event_image = 'assets/images/default-event.jpg';
     background: rgba(122, 156, 198, 0.05);
 }
 
-/* Sermon Card Image Styles */
+/* -------------------------------------------------------
+   Sermon Card — clickable styles
+   ------------------------------------------------------- */
+.sermon-card-link {
+    text-decoration: none;
+    color: inherit;
+    display: block;
+    cursor: pointer;
+}
+
+.sermon-card-link .card-image-wrapper {
+    overflow: hidden;
+    position: relative;
+}
+
+/* "View Sermon" overlay that appears on hover */
+.sermon-card-link .sermon-hover-overlay {
+    position: absolute;
+    inset: 0;
+    background: rgba(0, 0, 0, 0.45);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    opacity: 0;
+    transition: opacity 0.3s ease;
+}
+
+.sermon-card-link:hover .sermon-hover-overlay {
+    opacity: 1;
+}
+
+.sermon-card-link .sermon-hover-overlay span {
+    background: white;
+    color: var(--primary-dark);
+    padding: 0.5rem 1.25rem;
+    border-radius: 20px;
+    font-weight: 700;
+    font-size: 0.9rem;
+    display: flex;
+    align-items: center;
+    gap: 0.4rem;
+}
+
 .sermon-card-image {
     width: 100%;
     height: 200px;
     object-fit: cover;
     background-color: #f0f0f0;
-    transition: transform 0.3s ease;
+    transition: transform 0.35s ease;
 }
 
-.card:hover .sermon-card-image {
-    transform: scale(1.05);
+.sermon-card-link:hover .sermon-card-image {
+    transform: scale(1.06);
 }
 
-.card .card-image-wrapper {
-    overflow: hidden;
-    position: relative;
+/* Card lift on hover */
+.sermon-card-link.card {
+    transition: transform 0.25s ease, box-shadow 0.25s ease;
 }
 
-.card .card-image-wrapper::after {
-    content: '';
-    position: absolute;
-    bottom: 0;
-    left: 0;
-    right: 0;
-    height: 60px;
-    background: linear-gradient(to top, rgba(0,0,0,0.3), transparent);
-    pointer-events: none;
+.sermon-card-link.card:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 12px 30px rgba(0, 0, 0, 0.14);
 }
 
-/* Event Card Styles */
+/* -------------------------------------------------------
+   Event Card styles (unchanged from original)
+   ------------------------------------------------------- */
 .event-card {
     cursor: pointer;
     transition: all 0.3s ease;
@@ -177,13 +216,12 @@ $default_event_image = 'assets/images/default-event.jpg';
     opacity: 1;
 }
 
-/* Event Modal Styles */
+/* -------------------------------------------------------
+   Event Modal styles
+   ------------------------------------------------------- */
 .event-modal-overlay {
     position: fixed;
-    top: 0;
-    left: 0;
-    right: 0;
-    bottom: 0;
+    top: 0; left: 0; right: 0; bottom: 0;
     background: rgba(0,0,0,0.7);
     z-index: 9999;
     opacity: 0;
@@ -218,58 +256,35 @@ $default_event_image = 'assets/images/default-event.jpg';
     transform: scale(1) translateY(0);
 }
 
-.event-modal-header {
-    position: relative;
-}
-
-.event-modal-image {
-    width: 100%;
-    height: 280px;
-    object-fit: cover;
-}
+.event-modal-header    { position: relative; }
+.event-modal-image     { width: 100%; height: 280px; object-fit: cover; }
 
 .event-modal-close {
     position: absolute;
-    top: 15px;
-    right: 15px;
-    width: 40px;
-    height: 40px;
+    top: 15px; right: 15px;
+    width: 40px; height: 40px;
     border-radius: 50%;
     background: rgba(255,255,255,0.95);
     border: none;
     cursor: pointer;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    font-size: 1.25rem;
-    color: #333;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 1.25rem; color: #333;
     transition: all 0.3s ease;
     box-shadow: 0 2px 10px rgba(0,0,0,0.2);
 }
 
-.event-modal-close:hover {
-    background: white;
-    transform: scale(1.1);
-}
+.event-modal-close:hover { background: white; transform: scale(1.1); }
 
 .event-modal-badge {
     position: absolute;
-    top: 15px;
-    left: 15px;
+    top: 15px; left: 15px;
     padding: 0.5rem 1rem;
     border-radius: 20px;
-    font-size: 0.85rem;
-    font-weight: 700;
-    color: white;
+    font-size: 0.85rem; font-weight: 700; color: white;
 }
 
-.event-modal-badge.today {
-    background: var(--warning-color);
-}
-
-.event-modal-badge.this-week {
-    background: var(--primary-light);
-}
+.event-modal-badge.today     { background: var(--warning-color); }
+.event-modal-badge.this-week { background: var(--primary-light); }
 
 .event-modal-body {
     padding: 2rem;
@@ -294,142 +309,51 @@ $default_event_image = 'assets/images/default-event.jpg';
     border-radius: 12px;
 }
 
-.event-modal-meta-item {
-    display: flex;
-    align-items: center;
-    gap: 0.75rem;
-}
+.event-modal-meta-item { display: flex; align-items: center; gap: 0.75rem; }
 
 .event-modal-meta-item i {
-    width: 40px;
-    height: 40px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    background: var(--primary-light);
-    color: white;
-    border-radius: 10px;
-    font-size: 1rem;
+    width: 40px; height: 40px;
+    display: flex; align-items: center; justify-content: center;
+    background: var(--primary-light); color: white;
+    border-radius: 10px; font-size: 1rem;
 }
 
-.event-modal-meta-item .meta-content {
-    display: flex;
-    flex-direction: column;
-}
+.event-modal-meta-item .meta-content { display: flex; flex-direction: column; }
+.event-modal-meta-item .meta-label   { font-size: 0.75rem; color: #888; text-transform: uppercase; letter-spacing: 0.5px; }
+.event-modal-meta-item .meta-value   { font-size: 1rem; color: #333; font-weight: 600; }
 
-.event-modal-meta-item .meta-label {
-    font-size: 0.75rem;
-    color: #888;
-    text-transform: uppercase;
-    letter-spacing: 0.5px;
-}
-
-.event-modal-meta-item .meta-value {
-    font-size: 1rem;
-    color: #333;
-    font-weight: 600;
-}
-
-.event-modal-description {
-    color: #555;
-    line-height: 1.8;
-    margin-bottom: 1.5rem;
-    font-size: 1rem;
-}
+.event-modal-description { color: #555; line-height: 1.8; margin-bottom: 1.5rem; font-size: 1rem; }
 
 .event-modal-contact {
     padding: 1.25rem;
-    background: linear-gradient(135deg, rgba(122, 156, 198, 0.1), rgba(122, 156, 198, 0.05));
+    background: linear-gradient(135deg, rgba(122,156,198,0.1), rgba(122,156,198,0.05));
     border-radius: 12px;
     margin-bottom: 1.5rem;
 }
 
-.event-modal-contact h4 {
-    font-size: 1rem;
-    color: var(--primary-dark);
-    margin-bottom: 0.75rem;
-}
+.event-modal-contact h4         { font-size: 1rem; color: var(--primary-dark); margin-bottom: 0.75rem; }
+.event-modal-contact-info       { display: flex; flex-wrap: wrap; gap: 1rem; }
+.event-modal-contact-info a     { display: flex; align-items: center; gap: 0.5rem; color: var(--primary-light); text-decoration: none; font-weight: 500; transition: color 0.3s ease; }
+.event-modal-contact-info a:hover { color: var(--primary-dark); }
 
-.event-modal-contact-info {
-    display: flex;
-    flex-wrap: wrap;
-    gap: 1rem;
-}
-
-.event-modal-contact-info a {
-    display: flex;
-    align-items: center;
-    gap: 0.5rem;
-    color: var(--primary-light);
-    text-decoration: none;
-    font-weight: 500;
-    transition: color 0.3s ease;
-}
-
-.event-modal-contact-info a:hover {
-    color: var(--primary-dark);
-}
-
-.event-modal-actions {
-    display: flex;
-    gap: 1rem;
-    flex-wrap: wrap;
-}
-
-.event-modal-actions .btn {
-    flex: 1;
-    min-width: 150px;
-    text-align: center;
-    padding: 0.875rem 1.5rem;
-}
+.event-modal-actions { display: flex; gap: 1rem; flex-wrap: wrap; }
+.event-modal-actions .btn { flex: 1; min-width: 150px; text-align: center; padding: 0.875rem 1.5rem; }
 
 @media (max-width: 768px) {
-    .quick-nav-link {
-        min-width: 100px;
-        padding: 1rem;
-        font-size: 0.85rem;
-    }
-    .quick-nav-link i {
-        font-size: 1.25rem;
-    }
-    .quick-nav-link span {
-        font-size: 0.8rem;
-    }
+    .quick-nav-link  { min-width: 100px; padding: 1rem; font-size: 0.85rem; }
+    .quick-nav-link i { font-size: 1.25rem; }
+    .quick-nav-link span { font-size: 0.8rem; }
+
     .sermon-card-image,
-    .event-card-image {
-        height: 180px;
-    }
-    
-    .event-modal {
-        margin: 0;
-        border-radius: 16px 16px 0 0;
-        max-height: 90vh;
-    }
-    
-    .event-modal-image {
-        height: 200px;
-    }
-    
-    .event-modal-body {
-        padding: 1.5rem;
-        max-height: calc(90vh - 200px);
-    }
-    
-    .event-modal-title {
-        font-size: 1.5rem;
-    }
-    
-    .event-modal-meta {
-        grid-template-columns: 1fr;
-    }
-    
-    .event-modal-actions {
-        flex-direction: column;
-    }
-    
-    .event-modal-actions .btn {
-        width: 100%;
-    }
+    .event-card-image { height: 180px; }
+
+    .event-modal { margin: 0; border-radius: 16px 16px 0 0; max-height: 90vh; }
+    .event-modal-image { height: 200px; }
+    .event-modal-body  { padding: 1.5rem; max-height: calc(90vh - 200px); }
+    .event-modal-title { font-size: 1.5rem; }
+    .event-modal-meta  { grid-template-columns: 1fr; }
+    .event-modal-actions { flex-direction: column; }
+    .event-modal-actions .btn { width: 100%; }
 }
 </style>
 
@@ -480,6 +404,7 @@ $default_event_image = 'assets/images/default-event.jpg';
 
 <!-- ============================================
      SECTION 2: SERMONS
+     Each card is a full clickable link → sermon.php?id=<id>
      ============================================ -->
 <section id="sermons" class="section" style="background-color: #fff; scroll-margin-top: 120px;">
     <div class="container">
@@ -492,24 +417,39 @@ $default_event_image = 'assets/images/default-event.jpg';
         <div class="card-grid">
             <?php foreach ($sermons as $sermon): ?>
             <?php
-            // Determine the image to display
-            // Priority: 1. Uploaded cover image, 2. Default sermon image, 3. Placeholder
+            // Determine the image to display.
+            // Priority: 1. Uploaded cover image  2. Default image  3. Remote placeholder
             if (!empty($sermon['cover_image']) && file_exists($sermon['cover_image'])) {
                 $sermon_image = htmlspecialchars($sermon['cover_image']);
             } elseif (file_exists($default_sermon_image)) {
                 $sermon_image = $default_sermon_image;
             } else {
-                // Fallback placeholder if no default image exists
                 $sermon_image = 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=400&h=250&fit=crop';
             }
+
+            // Build the detail page URL — the only change from the original loop.
+            $sermon_url = 'sermon.php?id=' . (int) $sermon['id'];
             ?>
-            <div class="card">
+            <!--
+                Sermon card is now a full <a> element.
+                This makes the entire card (image + text) a single clickable link,
+                which is more accessible and easier to use than a button inside a div.
+            -->
+            <a href="<?php echo $sermon_url; ?>"
+               class="card sermon-card-link"
+               title="View full sermon: <?php echo htmlspecialchars($sermon['title']); ?>">
+
                 <div class="card-image-wrapper">
                     <img src="<?php echo $sermon_image; ?>" 
                          alt="<?php echo htmlspecialchars($sermon['title']); ?>" 
                          class="card-image sermon-card-image"
                          loading="lazy"
                          onerror="this.src='https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=400&h=250&fit=crop';">
+
+                    <!-- Hover overlay with "View Sermon" pill -->
+                    <div class="sermon-hover-overlay">
+                        <span><i class="fas fa-play-circle"></i> View Sermon</span>
+                    </div>
                 </div>
                 
                 <div class="card-content">
@@ -533,34 +473,27 @@ $default_event_image = 'assets/images/default-event.jpg';
                         ?>
                     </p>
                     <?php endif; ?>
-                    
-                    <div style="display: flex; gap: 0.5rem; margin-top: 1rem;">
+
+                    <!-- Media availability indicators (read-only badges, not interactive buttons) -->
+                    <div style="display: flex; gap: 0.5rem; margin-top: 1rem; flex-wrap: wrap;">
                         <?php if (!empty($sermon['video_url'])): ?>
-                        <a href="<?php echo htmlspecialchars($sermon['video_url']); ?>" 
-                           target="_blank" 
-                           class="btn btn-primary" 
-                           style="flex: 1; font-size: 0.9rem; padding: 0.5rem;">
-                            <i class="fas fa-play"></i> Watch
-                        </a>
+                        <span class="badge" style="background: rgba(var(--primary-rgb, 42,92,145),0.1); color: var(--primary-dark); padding: 0.3rem 0.75rem; border-radius: 20px; font-size: 0.8rem; font-weight: 600;">
+                            <i class="fas fa-play"></i> Video
+                        </span>
                         <?php endif; ?>
-                        
                         <?php if (!empty($sermon['audio_url'])): ?>
-                        <a href="<?php echo htmlspecialchars($sermon['audio_url']); ?>" 
-                           target="_blank" 
-                           class="btn btn-secondary" 
-                           style="flex: 1; font-size: 0.9rem; padding: 0.5rem;">
-                            <i class="fas fa-headphones"></i> Listen
-                        </a>
+                        <span class="badge" style="background: rgba(var(--primary-rgb, 42,92,145),0.1); color: var(--primary-dark); padding: 0.3rem 0.75rem; border-radius: 20px; font-size: 0.8rem; font-weight: 600;">
+                            <i class="fas fa-headphones"></i> Audio
+                        </span>
                         <?php endif; ?>
-                        
                         <?php if (empty($sermon['video_url']) && empty($sermon['audio_url'])): ?>
-                        <span class="btn btn-secondary" style="flex: 1; font-size: 0.9rem; padding: 0.5rem; opacity: 0.6; cursor: default;">
+                        <span class="badge" style="background: #f0f0f0; color: #999; padding: 0.3rem 0.75rem; border-radius: 20px; font-size: 0.8rem;">
                             <i class="fas fa-clock"></i> Coming Soon
                         </span>
                         <?php endif; ?>
                     </div>
                 </div>
-            </div>
+            </a>
             <?php endforeach; ?>
         </div>
         
@@ -602,12 +535,11 @@ $default_event_image = 'assets/images/default-event.jpg';
         <div class="card-grid">
             <?php foreach ($upcoming_events as $index => $event): ?>
             <?php
-            $event_date = strtotime($event['event_date']);
-            $is_today = date('Y-m-d', $event_date) == date('Y-m-d');
+            $event_date  = strtotime($event['event_date']);
+            $is_today    = date('Y-m-d', $event_date) == date('Y-m-d');
             $is_this_week = $event_date <= strtotime('+7 days') && $event_date > strtotime('today');
             
             // Determine the image to display
-            // Check for new 'event_image' field first, then fall back to old 'image_url'
             if (!empty($event['event_image']) && file_exists($event['event_image'])) {
                 $event_image = htmlspecialchars($event['event_image']);
             } elseif (!empty($event['image_url'])) {
@@ -619,8 +551,8 @@ $default_event_image = 'assets/images/default-event.jpg';
             }
             
             // Format time display
-            $start_time = date('g:i A', strtotime($event['event_time']));
-            $end_time = !empty($event['end_time']) ? date('g:i A', strtotime($event['end_time'])) : '';
+            $start_time   = date('g:i A', strtotime($event['event_time']));
+            $end_time     = !empty($event['end_time']) ? date('g:i A', strtotime($event['end_time'])) : '';
             $time_display = $end_time ? $start_time . ' - ' . $end_time : $start_time;
             ?>
             <div class="card event-card" 
@@ -684,7 +616,7 @@ $default_event_image = 'assets/images/default-event.jpg';
 </section>
 
 <!-- ============================================
-     EVENT MODAL
+     EVENT MODAL (unchanged)
      ============================================ -->
 <div class="event-modal-overlay" id="eventModalOverlay" onclick="closeEventModal(event)">
     <div class="event-modal" onclick="event.stopPropagation()">
@@ -729,9 +661,7 @@ $default_event_image = 'assets/images/default-event.jpg';
                 <div class="event-modal-contact-info" id="modalEventContactInfo"></div>
             </div>
             
-            <div class="event-modal-actions" id="modalEventActions">
-                <!-- Dynamic buttons will be added here -->
-            </div>
+            <div class="event-modal-actions" id="modalEventActions"></div>
         </div>
     </div>
 </div>
@@ -784,7 +714,6 @@ $default_event_image = 'assets/images/default-event.jpg';
 // Event data for modal
 const eventsData = <?php 
 $events_for_js = array_map(function($event) use ($default_event_image) {
-    // Determine image
     if (!empty($event['event_image']) && file_exists($event['event_image'])) {
         $image = $event['event_image'];
     } elseif (!empty($event['image_url'])) {
@@ -795,24 +724,23 @@ $events_for_js = array_map(function($event) use ($default_event_image) {
         $image = 'https://images.unsplash.com/photo-1511632765486-a01980e01a18?w=400';
     }
     
-    // Format times
     $start_time = date('g:i A', strtotime($event['event_time']));
-    $end_time = !empty($event['end_time']) ? date('g:i A', strtotime($event['end_time'])) : '';
+    $end_time   = !empty($event['end_time']) ? date('g:i A', strtotime($event['end_time'])) : '';
     
     return [
-        'id' => $event['id'],
-        'title' => $event['title'],
-        'date' => date('l, F j, Y', strtotime($event['event_date'])),
-        'date_raw' => $event['event_date'],
-        'time' => $end_time ? $start_time . ' - ' . $end_time : $start_time,
-        'location' => $event['location'] ?? '',
-        'description' => $event['description'] ?? '',
-        'image' => $image,
+        'id'               => $event['id'],
+        'title'            => $event['title'],
+        'date'             => date('l, F j, Y', strtotime($event['event_date'])),
+        'date_raw'         => $event['event_date'],
+        'time'             => $end_time ? $start_time . ' - ' . $end_time : $start_time,
+        'location'         => $event['location']         ?? '',
+        'description'      => $event['description']      ?? '',
+        'image'            => $image,
         'registration_url' => $event['registration_url'] ?? '',
-        'contact_email' => $event['contact_email'] ?? '',
-        'contact_phone' => $event['contact_phone'] ?? '',
-        'is_today' => date('Y-m-d', strtotime($event['event_date'])) == date('Y-m-d'),
-        'is_this_week' => strtotime($event['event_date']) <= strtotime('+7 days') && strtotime($event['event_date']) > strtotime('today')
+        'contact_email'    => $event['contact_email']    ?? '',
+        'contact_phone'    => $event['contact_phone']    ?? '',
+        'is_today'         => date('Y-m-d', strtotime($event['event_date'])) == date('Y-m-d'),
+        'is_this_week'     => strtotime($event['event_date']) <= strtotime('+7 days') && strtotime($event['event_date']) > strtotime('today'),
     ];
 }, $upcoming_events);
 echo json_encode($events_for_js, JSON_HEX_TAG | JSON_HEX_APOS | JSON_HEX_QUOT | JSON_HEX_AMP);
@@ -820,161 +748,101 @@ echo json_encode($events_for_js, JSON_HEX_TAG | JSON_HEX_APOS | JSON_HEX_QUOT | 
 
 function openEventModal(index) {
     const event = eventsData[index];
-    if (!event) {
-        console.error('Event not found at index:', index);
-        return;
-    }
+    if (!event) { console.error('Event not found at index:', index); return; }
     
     const overlay = document.getElementById('eventModalOverlay');
     
-    // Populate modal content
-    document.getElementById('modalEventImage').src = event.image;
-    document.getElementById('modalEventImage').alt = event.title;
-    document.getElementById('modalEventTitle').textContent = event.title;
-    document.getElementById('modalEventDate').textContent = event.date;
-    document.getElementById('modalEventTime').textContent = event.time;
+    document.getElementById('modalEventImage').src      = event.image;
+    document.getElementById('modalEventImage').alt      = event.title;
+    document.getElementById('modalEventTitle').textContent    = event.title;
+    document.getElementById('modalEventDate').textContent     = event.date;
+    document.getElementById('modalEventTime').textContent     = event.time;
     document.getElementById('modalEventLocation').textContent = event.location;
     
-    // Description with line breaks
     const descriptionEl = document.getElementById('modalEventDescription');
     if (event.description) {
-        descriptionEl.innerHTML = event.description.replace(/\n/g, '<br>');
-        descriptionEl.style.display = 'block';
+        descriptionEl.innerHTML      = event.description.replace(/\n/g, '<br>');
+        descriptionEl.style.display  = 'block';
     } else {
-        descriptionEl.style.display = 'none';
+        descriptionEl.style.display  = 'none';
     }
     
-    // Badge
     const badge = document.getElementById('modalEventBadge');
     if (event.is_today) {
         badge.textContent = '★ TODAY';
-        badge.className = 'event-modal-badge today';
+        badge.className   = 'event-modal-badge today';
         badge.style.display = 'block';
     } else if (event.is_this_week) {
         badge.textContent = '⏰ This Week';
-        badge.className = 'event-modal-badge this-week';
+        badge.className   = 'event-modal-badge this-week';
         badge.style.display = 'block';
     } else {
         badge.style.display = 'none';
     }
     
-    // Contact information
     const contactSection = document.getElementById('modalEventContact');
-    const contactInfo = document.getElementById('modalEventContactInfo');
+    const contactInfo    = document.getElementById('modalEventContactInfo');
     if (event.contact_email || event.contact_phone) {
         contactInfo.innerHTML = '';
-        if (event.contact_email) {
-            contactInfo.innerHTML += '<a href="mailto:' + event.contact_email + '"><i class="fas fa-envelope"></i> ' + event.contact_email + '</a>';
-        }
-        if (event.contact_phone) {
-            contactInfo.innerHTML += '<a href="tel:' + event.contact_phone + '"><i class="fas fa-phone"></i> ' + event.contact_phone + '</a>';
-        }
+        if (event.contact_email) contactInfo.innerHTML += '<a href="mailto:' + event.contact_email + '"><i class="fas fa-envelope"></i> ' + event.contact_email + '</a>';
+        if (event.contact_phone) contactInfo.innerHTML += '<a href="tel:' + event.contact_phone + '"><i class="fas fa-phone"></i> ' + event.contact_phone + '</a>';
         contactSection.style.display = 'block';
     } else {
         contactSection.style.display = 'none';
     }
     
-    // Action buttons
     const actionsEl = document.getElementById('modalEventActions');
     actionsEl.innerHTML = '';
-    
     if (event.registration_url) {
         actionsEl.innerHTML += '<a href="' + event.registration_url + '" target="_blank" class="btn btn-primary"><i class="fas fa-user-plus"></i> Register Now</a>';
     }
+    actionsEl.innerHTML += '<a href="' + generateGoogleCalendarUrl(event) + '" target="_blank" class="btn btn-secondary"><i class="fas fa-calendar-plus"></i> Add to Calendar</a>';
     
-    // Add to calendar button (Google Calendar)
-    const calendarUrl = generateGoogleCalendarUrl(event);
-    actionsEl.innerHTML += '<a href="' + calendarUrl + '" target="_blank" class="btn btn-secondary"><i class="fas fa-calendar-plus"></i> Add to Calendar</a>';
-    
-    // Show modal
     overlay.classList.add('active');
     document.body.style.overflow = 'hidden';
 }
 
 function closeEventModal(e) {
-    if (e) {
-        e.stopPropagation();
-    }
-    const overlay = document.getElementById('eventModalOverlay');
-    overlay.classList.remove('active');
+    if (e) e.stopPropagation();
+    document.getElementById('eventModalOverlay').classList.remove('active');
     document.body.style.overflow = '';
 }
 
 function generateGoogleCalendarUrl(event) {
-    const startDate = new Date(event.date_raw + 'T' + (event.time.split(' - ')[0] || '09:00'));
-    const endDate = new Date(startDate.getTime() + 2 * 60 * 60 * 1000); // Default 2 hours
-    
-    const formatDate = (date) => {
-        return date.toISOString().replace(/-|:|\.\d+/g, '').slice(0, 15) + 'Z';
-    };
-    
-    const params = new URLSearchParams({
-        action: 'TEMPLATE',
-        text: event.title,
-        dates: `${formatDate(startDate)}/${formatDate(endDate)}`,
-        details: event.description || '',
-        location: event.location,
-        sf: 'true'
-    });
-    
-    return `https://calendar.google.com/calendar/render?${params.toString()}`;
+    const startDate = new Date(event.date_raw + 'T09:00:00');
+    const endDate   = new Date(startDate.getTime() + 2 * 60 * 60 * 1000);
+    const fmt       = d => d.toISOString().replace(/-|:|\.\d+/g, '').slice(0, 15) + 'Z';
+    const params    = new URLSearchParams({ action: 'TEMPLATE', text: event.title, dates: fmt(startDate) + '/' + fmt(endDate), details: event.description || '', location: event.location, sf: 'true' });
+    return 'https://calendar.google.com/calendar/render?' + params.toString();
 }
 
-// Close modal on Escape key
-document.addEventListener('keydown', function(e) {
-    if (e.key === 'Escape') {
-        closeEventModal();
-    }
-});
+document.addEventListener('keydown', function (e) { if (e.key === 'Escape') closeEventModal(); });
 
-// Smooth scroll and active link highlighting
-document.addEventListener('DOMContentLoaded', function() {
+// Smooth scroll + active nav highlight
+document.addEventListener('DOMContentLoaded', function () {
     const navLinks = document.querySelectorAll('.quick-nav-link');
     const sections = document.querySelectorAll('section[id]');
     
-    // Smooth scroll
     navLinks.forEach(link => {
-        link.addEventListener('click', function(e) {
+        link.addEventListener('click', function (e) {
             e.preventDefault();
-            const targetId = this.getAttribute('href').substring(1);
-            const targetSection = document.getElementById(targetId);
-            
-            if (targetSection) {
-                const offset = 120;
-                const elementPosition = targetSection.getBoundingClientRect().top;
-                const offsetPosition = elementPosition + window.pageYOffset - offset;
-                
-                window.scrollTo({
-                    top: offsetPosition,
-                    behavior: 'smooth'
-                });
-            }
+            const target = document.getElementById(this.getAttribute('href').substring(1));
+            if (target) window.scrollTo({ top: target.getBoundingClientRect().top + window.pageYOffset - 120, behavior: 'smooth' });
         });
     });
     
-    // Highlight active section on scroll
-    function highlightActiveSection() {
-        let currentSection = '';
-        
-        sections.forEach(section => {
-            const sectionTop = section.offsetTop - 150;
-            const sectionHeight = section.clientHeight;
-            
-            if (window.pageYOffset >= sectionTop && window.pageYOffset < sectionTop + sectionHeight) {
-                currentSection = section.getAttribute('id');
-            }
+    function highlightActive() {
+        let current = '';
+        sections.forEach(s => {
+            if (window.pageYOffset >= s.offsetTop - 150 && window.pageYOffset < s.offsetTop + s.clientHeight) current = s.id;
         });
-        
-        navLinks.forEach(link => {
-            link.classList.remove('active');
-            if (link.getAttribute('href') === `#${currentSection}`) {
-                link.classList.add('active');
-            }
+        navLinks.forEach(l => {
+            l.classList.toggle('active', l.getAttribute('href') === '#' + current);
         });
     }
     
-    window.addEventListener('scroll', highlightActiveSection);
-    highlightActiveSection();
+    window.addEventListener('scroll', highlightActive);
+    highlightActive();
 });
 </script>
 

@@ -26,6 +26,16 @@ define('OTP_LENGTH', 6);
 define('OTP_EXPIRY_MINUTES', 15);
 define('MAX_OTP_ATTEMPTS', 3);
 
+// ============================================
+// SMTP CONFIGURATION - UPDATE THESE VALUES!
+// ============================================
+define('SMTP_HOST', 'smtp.gmail.com');           // SMTP server
+define('SMTP_USERNAME', 'henryboppeebensonjr137@gmail.com'); // Your email address
+define('SMTP_PASSWORD', 'raqwzvxwamcubyyk');    // Gmail App Password (NOT your regular password)
+define('SMTP_PORT', 587);                        // TLS port
+define('SMTP_FROM_EMAIL', 'noreply@cmmi.org');
+define('SMTP_FROM_NAME', 'CMMI Admin');
+
 // Initialize variables
 $error_message = '';
 $success_message = '';
@@ -45,13 +55,9 @@ function generateOTP($length = 6) {
     return $otp;
 }
 
-// Send OTP via email
-function sendOTPEmail($email, $otp, $username) {
-    $to = $email;
-    $subject = "Password Reset OTP - CMMI Admin";
-    
-    // Email body
-    $message = "
+// Get OTP Email HTML Body
+function getOTPEmailBody($otp, $username) {
+    return "
     <html>
     <head>
         <title>Password Reset OTP</title>
@@ -90,16 +96,52 @@ function sendOTPEmail($email, $otp, $username) {
     </body>
     </html>
     ";
+}
+
+// Send OTP via email using PHPMailer
+function sendOTPEmail($email, $otp, $username) {
+    // Check if PHPMailer is available via Composer
+    $phpmailerPath = __DIR__ . '/../vendor/autoload.php';
     
-    // Email headers
-    $headers = "MIME-Version: 1.0" . "\r\n";
-    $headers .= "Content-type:text/html;charset=UTF-8" . "\r\n";
-    $headers .= "From: CMMI Admin <noreply@cmmi.org>" . "\r\n";
-    $headers .= "Reply-To: noreply@cmmi.org" . "\r\n";
-    $headers .= "X-Mailer: PHP/" . phpversion();
-    
-    // Send email
-    return mail($to, $subject, $message, $headers);
+    if (file_exists($phpmailerPath)) {
+        require_once $phpmailerPath;
+        
+        $mail = new PHPMailer\PHPMailer\PHPMailer(true);
+        
+        try {
+            // SMTP Configuration
+            $mail->isSMTP();
+            $mail->Host       = SMTP_HOST;
+            $mail->SMTPAuth   = true;
+            $mail->Username   = SMTP_USERNAME;
+            $mail->Password   = SMTP_PASSWORD;
+            $mail->SMTPSecure = PHPMailer\PHPMailer\PHPMailer::ENCRYPTION_STARTTLS;
+            $mail->Port       = SMTP_PORT;
+            
+            // Recipients
+            $mail->setFrom(SMTP_FROM_EMAIL, SMTP_FROM_NAME);
+            $mail->addAddress($email);
+            
+            // Content
+            $mail->isHTML(true);
+            $mail->Subject = 'Password Reset OTP - CMMI Admin';
+            $mail->Body    = getOTPEmailBody($otp, $username);
+            $mail->AltBody = "Hello {$username}, Your OTP for password reset is: {$otp}. This code expires in " . OTP_EXPIRY_MINUTES . " minutes.";
+            
+            $mail->send();
+            return true;
+        } catch (Exception $e) {
+            error_log("PHPMailer Error: " . $mail->ErrorInfo);
+            return false;
+        }
+    } else {
+        // PHPMailer not installed - show helpful error
+        error_log("PHPMailer not found. Install it via: composer require phpmailer/phpmailer");
+        
+        // For development: Return true and show OTP on screen (REMOVE IN PRODUCTION!)
+        // This allows testing the flow without email
+        return 'dev_mode';
+    }
 }
 
 // Handle form submissions
@@ -139,28 +181,28 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                         $_SESSION['reset_otp_attempts'] = 0;
                         
                         // Send OTP email
-                        $email_sent = sendOTPEmail($email, $otp, $admin['username']);
+                        $email_result = sendOTPEmail($email, $otp, $admin['username']);
                         
-                        if ($email_sent) {
+                        if ($email_result === true) {
                             $step = 'otp';
                             $success_message = 'A verification code has been sent to your email address.';
+                        } elseif ($email_result === 'dev_mode') {
+                            // Development mode - show OTP on screen
+                            $step = 'otp';
+                            $success_message = 'A verification code has been sent to your email address.';
+                            // DEVELOPMENT ONLY - Remove this line in production!
+                            $success_message .= '<br><small style="color:#856404; background:#fff3cd; padding:5px 10px; border-radius:4px; display:inline-block; margin-top:10px;">[DEV MODE] Your OTP is: <strong>' . $otp . '</strong></small>';
                         } else {
-                            // Email failed but still allow OTP entry (for testing/dev)
-                            // In production, you might want to show an error instead
-                            $step = 'otp';
-                            $success_message = 'A verification code has been sent to your email address.';
-                            // For development/testing - show OTP (REMOVE IN PRODUCTION!)
-                            // $success_message .= ' <br><small style="color:#666;">[DEV MODE] Your OTP is: ' . $otp . '</small>';
+                            $error_message = 'Failed to send verification email. Please try again or contact support.';
                         }
                     }
                 } else {
-                    // Don't reveal if email exists or not (security)
-                    $error_message = 'If this email is registered, you will receive a verification code shortly.';
-                    // Actually, let's be user-friendly and tell them
+                    // Don't reveal if email exists or not (security) - or be user-friendly
                     $error_message = 'No account found with this email address.';
                 }
             } catch (PDOException $e) {
                 $error_message = 'An error occurred. Please try again.';
+                error_log("Database Error: " . $e->getMessage());
             }
         }
     }
@@ -248,9 +290,17 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             $_SESSION['reset_otp_attempts'] = 0;
             
             // Send OTP email
-            $email_sent = sendOTPEmail($_SESSION['reset_email'], $otp, $_SESSION['reset_username']);
+            $email_result = sendOTPEmail($_SESSION['reset_email'], $otp, $_SESSION['reset_username']);
             
-            $success_message = 'A new verification code has been sent to your email.';
+            if ($email_result === true) {
+                $success_message = 'A new verification code has been sent to your email.';
+            } elseif ($email_result === 'dev_mode') {
+                $success_message = 'A new verification code has been sent to your email.';
+                // DEVELOPMENT ONLY - Remove this line in production!
+                $success_message .= '<br><small style="color:#856404; background:#fff3cd; padding:5px 10px; border-radius:4px; display:inline-block; margin-top:10px;">[DEV MODE] Your OTP is: <strong>' . $otp . '</strong></small>';
+            } else {
+                $error_message = 'Failed to send verification email. Please try again.';
+            }
             $step = 'otp';
         } else {
             $error_message = 'Session expired. Please start again.';
@@ -495,11 +545,9 @@ if (isset($_GET['cancel'])) {
             box-shadow: 0 0 0 3px rgba(122, 156, 198, 0.15);
         }
         
-        /* Hidden full OTP input */
-        .otp-hidden {
-            position: absolute;
-            opacity: 0;
-            pointer-events: none;
+        .otp-input.filled {
+            border-color: #28a745;
+            background: #f0fff4;
         }
         
         /* Buttons */
@@ -736,7 +784,7 @@ if (isset($_GET['cancel'])) {
                     Code expires in: <span class="time" id="timerDisplay">--:--</span>
                 </div>
                 
-                <button type="submit" name="verify_otp" class="btn btn-primary">
+                <button type="submit" name="verify_otp" id="verifyBtn" class="btn btn-primary">
                     <i class="fas fa-check-circle"></i> Verify Code
                 </button>
             </form>
@@ -761,17 +809,27 @@ if (isset($_GET['cancel'])) {
     
     <?php if ($step === 'otp'): ?>
     <script>
-        // OTP Input Handling
+        // OTP Input Handling - NO AUTO-SUBMIT
         const otpInputs = document.querySelectorAll('.otp-input');
         const otpHidden = document.getElementById('otpHidden');
         const otpForm = document.getElementById('otpForm');
         
+        // Update hidden input with all OTP values
         function updateHiddenInput() {
             let otp = '';
             otpInputs.forEach(input => {
                 otp += input.value;
             });
             otpHidden.value = otp;
+            
+            // Add visual feedback for filled inputs
+            otpInputs.forEach(input => {
+                if (input.value) {
+                    input.classList.add('filled');
+                } else {
+                    input.classList.remove('filled');
+                }
+            });
         }
         
         otpInputs.forEach((input, index) => {
@@ -785,29 +843,29 @@ if (isset($_GET['cancel'])) {
                     return;
                 }
                 
-                // Move to next input
+                // Move to next input if value entered
                 if (value && index < otpInputs.length - 1) {
                     otpInputs[index + 1].focus();
                 }
                 
                 updateHiddenInput();
                 
-                // Auto-submit when all filled
-                if (index === otpInputs.length - 1 && value) {
-                    const allFilled = Array.from(otpInputs).every(inp => inp.value);
-                    if (allFilled) {
-                        // Small delay to show the last digit
-                        setTimeout(() => {
-                            otpForm.submit();
-                        }, 200);
-                    }
-                }
+                // NO AUTO-SUBMIT - User must click the Verify button
             });
             
             // Handle backspace
             input.addEventListener('keydown', (e) => {
                 if (e.key === 'Backspace' && !e.target.value && index > 0) {
                     otpInputs[index - 1].focus();
+                }
+                
+                // Allow Enter key to submit form only if all digits entered
+                if (e.key === 'Enter') {
+                    e.preventDefault();
+                    updateHiddenInput();
+                    if (otpHidden.value.length === 6) {
+                        otpForm.submit();
+                    }
                 }
             });
             
@@ -824,9 +882,11 @@ if (isset($_GET['cancel'])) {
                 
                 updateHiddenInput();
                 
-                // Focus last filled or next empty
+                // Focus the last filled input
                 const nextIndex = Math.min(pasteData.length, otpInputs.length - 1);
                 otpInputs[nextIndex].focus();
+                
+                // NO AUTO-SUBMIT after paste
             });
             
             // Select all on focus
@@ -835,16 +895,22 @@ if (isset($_GET['cancel'])) {
             });
         });
         
-        // Form submit handler
+        // Form submit handler - ensure hidden input is updated
         otpForm.addEventListener('submit', (e) => {
             updateHiddenInput();
+            
+            // Validate that all 6 digits are entered
+            if (otpHidden.value.length !== 6) {
+                e.preventDefault();
+                alert('Please enter all 6 digits of the verification code.');
+                return false;
+            }
         });
         
         // Timer
         const expiryTime = <?php echo isset($_SESSION['reset_otp_expiry']) ? $_SESSION['reset_otp_expiry'] : 0; ?>;
         const timerDisplay = document.getElementById('timerDisplay');
         const timerContainer = document.getElementById('otpTimer');
-        const resendBtn = document.getElementById('resendBtn');
         
         function updateTimer() {
             const now = Math.floor(Date.now() / 1000);
